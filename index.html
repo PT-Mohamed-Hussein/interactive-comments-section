@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32x32.png">
+
+    <title>Frontend Mentor | Interactive comments section</title>
+
+    <link rel="stylesheet" href="main.css">
+    <script defer src="https://unpkg.com/alpinejs@3.9.0/dist/cdn.min.js"></script>
+    <script src="https://kit.fontawesome.com/0e24279c50.js" crossorigin="anonymous"></script>
+
+</head>
+
+<body x-data="getData()" x-init="fetchJsonData()">
+    <div class="modal-container" x-show="modalStatus">
+        <div class="modal" @click.outside='modalStatus = false' x-ref="modal" x-cloak>
+            <h3 class="modalHeader">Delete Comment</h3>
+            <p class="disclaimer">Are You Sure You Want To Delete This Comment? This Will Remove The Comment And Can't Be Undone</p>
+            <div class="btnCont">
+                <button class="Undo" @click.self='modalStatus = false'>NO, CANCEL</button>
+                <button class="Remove" @click.self='modalStatus = false'>YES, DELETE</button>
+            </div>
+
+        </div>
+    </div>
+    <div class="container">
+        <template x-for='comment in comments' :key='comment.id'>
+            <div class="cont">
+                <div class="commentHolder flexDisplayrow">
+                    <div class="likes">
+                        <span class="plus icon" @click="ChangeCommScoreValue('increment', $el.getAttribute('data-clicked-Id'))" :data-clicked-id = 'comment.id'>
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+                        <span class="likesCount" x-text="comment.score"></span>
+                        <span class="minus icon" @click="ChangeCommScoreValue('decrement', $el.getAttribute('data-clicked-Id'))" :data-clicked-id = 'comment.id'>
+                            <i class="fa-solid fa-minus"></i>
+                        </span>
+                    </div>
+                    <div class="comment">
+                        <div class="headerContent">
+                            <div class="authorInfo">
+                                <img :src="comment.user.image.webp">
+                                <p class="CommentOwner" x-text="comment.user.username"></p>
+                                <span class="CreatedAt" x-text="comment.createdAt"></span>
+                            </div>
+                            <span class="replyBtn" @click = 'toggleReplyForComments(comment.id)'>
+                            <i class="fa-solid fa-reply"></i> Reply
+                        </span>
+                        </div>
+                        <p class="commentContent" x-text="comment.content"></p>
+                    </div>
+                </div>
+                <div x-show="comment.replyArea" class="commentHolder">
+                    <div class="Authorcomment">
+                        <img :src="currentusers.image.webp">
+                        <div class="AuthortextArea">
+                            <textarea placeholder="Add a Comment" id="AuthorCommentSection" class="AuthorCommentSection" cols="70" rows="5"></textarea>
+                        </div>
+                        <button class="submitBtn" id="submitBtn" x-text="sendStatus"></button>
+                    </div>
+                </div>
+                <div class="repBorder">
+                    <template x-for="reply in comment.replies">
+                        <div class="repCont">
+
+                        <div class="replyHolder flexDisplayrow">
+                            <div class="likes replyLikes">
+                                <span class="plus icon" @click="ChangeReplyScoreValue('increment', comment.id, reply.id)">
+                                    <i class="fa-solid fa-plus"></i>
+                                </span>
+                                <span class="likesCount" x-text="reply.score"></span>
+                                <span class="minus icon" @click="ChangeReplyScoreValue('decrement', comment.id, reply.id)">
+                                    <i class="fa-solid fa-minus"></i>
+                                </span>
+                            </div>
+                            <div class="comment">
+                                <div class="headerContent">
+                                    <div class="authorInfo">
+                                        <img :src="reply.user.image.webp">
+                                        <span class="CommentOwner" x-text="reply.user.username"></span>
+                                        <span x-show = '(reply.user.username === currentusers.username)' class="CurrentUser">You</span>
+                                        <span class="CreatedAt" x-text="reply.createdAt"></span>
+                                    </div>
+                                    <div class="modifierIcons">
+                                        <span x-show = '(reply.user.username === currentusers.username)' class="deleteBtn myicon" @click.self = 'modalStatus = true '>
+                                            <i class="fa-solid fa-trash"></i>
+                                            Delete
+                                        </span>
+                                        <span x-show = '(reply.user.username === currentusers.username)' class="editBtn myicon" @click = 'editReply(comment.id, reply.id)'>
+                                            <i class="fa-solid fa-pen"></i>                        
+                                            Edit
+                                        </span>
+    
+                                    </div>
+                                    <span class="replyBtn" x-show = '(reply.user.username !== currentusers.username)'  @click = 'toggleReplyForReplies(comment.id, reply.id)'>
+                                    <i class="fa-solid fa-reply"></i> Reply
+                                </span>
+                                </div>
+                                <span class="RepliedTo" x-text="'@' + reply.replyingTo"></span>
+                                <span class="commentContent" x-text="reply.content" ></span>
+                            </div>
+                        </div>
+                        <div x-show="reply.replyArea" class="commentHolder replyCommentHolder">
+                            <div class="Authorcomment">
+                                <img :src="currentusers.image.webp">
+                                <div class="AuthortextArea">
+                                    <textarea placeholder="Add a Comment" id="AuthorCommentSection" class="AuthorCommentSection" cols="70" rows="5"></textarea>
+                                </div>
+                                <button class="submitBtn" id="submitBtn" x-text="(reply.user.username === currentusers.username)? 'EDIT' : sendStatus">SEND</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    </template>
+    </div>
+
+    </div>
+    </template>
+
+    <div class="commentHolder">
+        <div class="Authorcomment">
+            <img :src="currentusers.image.webp">
+            <div class="AuthortextArea">
+                <textarea placeholder="Add a Comment" id="AuthorCommentSection" class="AuthorCommentSection" cols="70" rows="5"></textarea>
+            </div>
+            <button class="submitBtn" id="submitBtn">SEND</button>
+        </div>
+    </div>
+    <div class="attribution">
+        Challenge by <a href="https://www.frontendmentor.io?ref=challenge" target="_blank">Frontend Mentor</a>. Coded by <a href="#">Your Name Here</a>.
+    </div>
+
+    </div>
+    <script src="main.js" type="text/javascript"></script>
+</body>
+
+</html>
